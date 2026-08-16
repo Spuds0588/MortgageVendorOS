@@ -1,0 +1,46 @@
+{
+  "name": "mortgage-vendor-os",
+  "version": "0.1.0",
+  "description": "Free, open-source, edge-compatible JavaScript library that unifies ordering, status tracking, messaging, and document retrieval across mortgage settlement vendors (Appraisal, Title, HOI, VOE/VOA, Liens).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test test/"
+  },
+  "keywords": [
+    "mortgage",
+    "appraisal",
+    "title",
+    "voe",
+    "voa",
+    "los",
+    "api wrapper",
+    "settlement",
+    "reggora",
+    "edge",
+    "serverless"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  },
+  "dependencies": {
+    "mortgage-vendor-os": "file:mortgage-vendor-os-0.1.0.tgz"
+  }
+}
