@@ -176,3 +176,61 @@ test('constructor validates recipient and api key', () => {
   assert.throws(() => new RestEmailFallback('', 'key'), TypeError);
   assert.throws(() => new RestEmailFallback('a@b.com', ''), TypeError);
 });
+
+test('email body renders every scalar field of nested objects', async () => {
+  const { fetchImpl, calls } = stubFetch();
+  const provider = new RestEmailFallback('orders@bobstitle.com', 're_123', { fetchImpl });
+
+  await provider.placeOrder({
+    service_type: 'VOE',
+    payload: {
+      employer: { name: 'Acme Inc', address: '123 Corp Way' },
+      employee: { name: 'Jane Doe', ssn_last4: '4321', dob: '1990-01-01' },
+      verification_type: 'FULL',
+    },
+    meta: { requested_at: '2026-08-16T00:00:00.000Z' },
+  });
+
+  const sent = JSON.parse(calls[0].init.body);
+  assert.match(sent.text, /Acme Inc \| Address: 123 Corp Way/);
+  assert.match(sent.text, /Jane Doe \| SSN Last 4: 4321 \| Dob: 1990-01-01/);
+  assert.doesNotMatch(sent.text, /\[object Object\]/);
+});
+
+test('email body renders generic nested objects without [object Object]', async () => {
+  const { fetchImpl, calls } = stubFetch();
+  const provider = new RestEmailFallback('orders@bobstitle.com', 're_123', { fetchImpl });
+
+  await provider.placeOrder({
+    service_type: 'APPRAISAL',
+    payload: {
+      address: '123 Main St',
+      extra: { rush: true, client_ref: 'abc-123' },
+    },
+    meta: { requested_at: '2026-08-16T00:00:00.000Z' },
+  });
+
+  const sent = JSON.parse(calls[0].init.body);
+  assert.match(sent.text, /Rush: true/);
+  assert.match(sent.text, /Client Ref: "abc-123"/);
+  assert.doesNotMatch(sent.text, /\[object Object\]/);
+});
+
+test('sendMessage validates vendorOrderId when used directly', async () => {
+  const provider = new RestEmailFallback('orders@bobstitle.com', 're_123');
+  await assert.rejects(provider.sendMessage('', { text: 'hi' }), TypeError);
+  await assert.rejects(provider.sendMessage('  ', { text: 'hi' }), TypeError);
+});
+
+test('attachments without a name render a fallback label', async () => {
+  const { fetchImpl, calls } = stubFetch();
+  const provider = new RestEmailFallback('orders@bobstitle.com', 're_123', { fetchImpl });
+
+  await provider.sendMessage('order-1', {
+    text: 'sketch attached',
+    attachments: [{ url: 'https://files.example/sketch.pdf' }],
+  });
+
+  const sent = JSON.parse(calls[0].init.body);
+  assert.match(sent.text, /\(unnamed\) \(https:\/\/files\.example\/sketch\.pdf\)/);
+});

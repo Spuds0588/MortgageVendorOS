@@ -109,3 +109,22 @@ test('placeOrder returns provider name and timestamp', async () => {
   assert.equal(result.provider, 'Fake Vendor Co');
   assert.equal(result.created_at, '2026-08-16T00:00:00.000Z');
 });
+
+test('parallel orders get unique ids and independent state', async () => {
+  const provider = new MockProvider();
+
+  const placed = await Promise.all(
+    Array.from({ length: 50 }, (_, i) =>
+      provider.placeOrder(ctx({ payload: { address: `${i} Main St` } }))
+    )
+  );
+
+  const ids = placed.map((p) => p.vendorOrderId);
+  assert.equal(new Set(ids).size, 50, 'all vendor order ids must be unique');
+
+  // Advance only the first order to completion; others must stay untouched.
+  await provider.getStatus(ids[0]);
+  await provider.getStatus(ids[0]);
+  assert.equal((await provider.getStatus(ids[0])).state, 'COMPLETE');
+  assert.equal((await provider.getStatus(ids[1])).state, 'IN_PROGRESS');
+});

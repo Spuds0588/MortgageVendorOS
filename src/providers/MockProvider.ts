@@ -1,5 +1,6 @@
 import { BaseProvider } from '../core/BaseProvider.js';
 import { OrderNotFoundError } from '../errors.js';
+import { randomId } from '../internal/id.js';
 import type {
   MessagePayload,
   MessageResult,
@@ -76,7 +77,7 @@ export class MockProvider extends BaseProvider {
   }
 
   async placeOrder(orderCtx: OrderContext<OrderPayload>): Promise<OrderResult> {
-    const vendorOrderId = this.newId();
+    const vendorOrderId = randomId();
     this.orders.set(vendorOrderId, {
       vendorOrderId,
       orderCtx,
@@ -151,7 +152,7 @@ export class MockProvider extends BaseProvider {
   ): Promise<MessageResult> {
     const order = this.requireOrder(vendorOrderId);
     order.messages.push({
-      id: this.newId(),
+      id: randomId(),
       vendorOrderId,
       direction: 'OUTBOUND',
       author: message.author,
@@ -159,7 +160,7 @@ export class MockProvider extends BaseProvider {
       created_at: new Date().toISOString(),
     });
     return {
-      messageId: this.newId(),
+      messageId: randomId(),
       vendorOrderId,
       status: 'SENT',
       created_at: new Date().toISOString(),
@@ -182,7 +183,7 @@ export class MockProvider extends BaseProvider {
   ): VendorMessage {
     const order = this.requireOrder(vendorOrderId);
     const message: VendorMessage = {
-      id: this.newId(),
+      id: randomId(),
       vendorOrderId,
       direction: 'INBOUND',
       author,
@@ -212,11 +213,4 @@ export class MockProvider extends BaseProvider {
     return order;
   }
 
-  private newId(): string {
-    const cryptoObj = globalThis.crypto;
-    if (cryptoObj && typeof cryptoObj.randomUUID === 'function') {
-      return cryptoObj.randomUUID();
-    }
-    return `mock-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-  }
 }

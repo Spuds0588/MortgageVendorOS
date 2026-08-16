@@ -174,6 +174,40 @@ test('a custom BaseProvider subclass satisfies the full lifecycle', async () => 
   assert.equal(thread.messages.length, 0);
 });
 
+test('use() rejects providers that do not extend BaseProvider', () => {
+  const os = new MortgageVendorOS();
+  assert.throws(() => os.use('APPRAISAL', {}), TypeError);
+  assert.throws(() => os.use('APPRAISAL', { placeOrder: async () => {} }), TypeError);
+  assert.throws(() => os.use('APPRAISAL', null), TypeError);
+  // Valid subclass still works
+  assert.doesNotThrow(() => os.use('APPRAISAL', new MockProvider()));
+});
+
+test('order() rejects non-object payloads', async () => {
+  const os = new MortgageVendorOS();
+  os.use('APPRAISAL', new MockProvider());
+
+  await assert.rejects(os.order('APPRAISAL', null), TypeError);
+  await assert.rejects(os.order('APPRAISAL', undefined), TypeError);
+  await assert.rejects(os.order('APPRAISAL', ['address']), TypeError);
+  await assert.rejects(os.order('APPRAISAL', '123 Main St'), TypeError);
+  // Valid payload still works
+  await assert.doesNotReject(os.order('APPRAISAL', { address: '1 Main St' }));
+});
+
+test('registrations() returns a defensive copy', async () => {
+  const os = new MortgageVendorOS();
+  os.use('APPRAISAL', new MockProvider());
+
+  const view = os.registrations();
+  view.set('TITLE', new MockProvider()); // mutate the returned map
+  view.clear();
+
+  assert.equal(os.provider('APPRAISAL') instanceof MockProvider, true);
+  assert.equal(os.provider('TITLE'), undefined);
+  assert.equal(os.registrations().size, 1);
+});
+
 test('order() passes a normalized OrderContext to the provider', async () => {
   let seenContext;
   class CaptureProvider extends BaseProvider {

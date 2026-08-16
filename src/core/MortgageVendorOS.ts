@@ -52,6 +52,11 @@ export class MortgageVendorOS {
    * replaces its provider (useful for tests and failover).
    */
   use(service: ServiceType | ServiceType[], provider: BaseProvider): this {
+    if (!(provider instanceof BaseProvider)) {
+      throw new TypeError(
+        'use() requires a provider that extends BaseProvider.'
+      );
+    }
     const services = Array.isArray(service) ? service : [service];
     for (const s of services) {
       this.assertValidService(s);
@@ -73,9 +78,9 @@ export class MortgageVendorOS {
     return this.providers.get(service);
   }
 
-  /** All registered (service → provider) registrations. */
+  /** All registered (service → provider) registrations (a defensive copy). */
   registrations(): ReadonlyMap<ServiceType, BaseProvider> {
-    return this.providers;
+    return new Map(this.providers);
   }
 
   /**
@@ -87,6 +92,13 @@ export class MortgageVendorOS {
     service: S,
     payload: OrderPayloadFor<S>
   ): Promise<OrderResult> {
+    if (
+      typeof payload !== 'object' ||
+      payload === null ||
+      Array.isArray(payload)
+    ) {
+      throw new TypeError('order() requires a payload object.');
+    }
     const provider = this.requireProvider(service);
     const ctx: OrderContext<OrderPayloadFor<S>> = {
       service_type: service,

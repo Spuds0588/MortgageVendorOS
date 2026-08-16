@@ -1,5 +1,6 @@
 import { BaseProvider } from '../core/BaseProvider.js';
 import { ProviderError } from '../errors.js';
+import { randomId } from '../internal/id.js';
 import type {
   MessagePayload,
   MessageResult,
@@ -7,7 +8,6 @@ import type {
   OrderContext,
   OrderPayload,
   OrderResult,
-  Party,
   PropertyAddress,
   VendorDocuments,
   VendorStatus,
@@ -107,7 +107,7 @@ export class RestEmailFallback extends BaseProvider {
   }
 
   async placeOrder(orderCtx: OrderContext<OrderPayload>): Promise<OrderResult> {
-    const vendorOrderId = randomUUID();
+    const vendorOrderId = randomId();
     const { service_type, payload, meta } = orderCtx;
     const subject = [
       this.options.subjectPrefix,
@@ -151,6 +151,9 @@ export class RestEmailFallback extends BaseProvider {
     vendorOrderId: string,
     message: MessagePayload
   ): Promise<MessageResult> {
+    if (typeof vendorOrderId !== 'string' || vendorOrderId.trim() === '') {
+      throw new TypeError('vendorOrderId must be a non-empty string.');
+    }
     const subject = [
       this.options.subjectPrefix,
       `Re: ${vendorOrderId}`,
@@ -164,7 +167,7 @@ export class RestEmailFallback extends BaseProvider {
       lines.push('');
       lines.push('Attachments:');
       for (const a of message.attachments) {
-        lines.push(`  - ${a.name}${a.url ? ` (${a.url})` : ''}`);
+        lines.push(`  - ${a.name ?? '(unnamed)'}${a.url ? ` (${a.url})` : ''}`);
       }
     }
     if (message.author) {
@@ -175,7 +178,7 @@ export class RestEmailFallback extends BaseProvider {
     const raw = await this.sendEmail(subject, lines.join('\n'));
 
     return {
-      messageId: randomUUID(),
+      messageId: randomId(),
       vendorOrderId,
       status: 'SENT',
       created_at: new Date().toISOString(),
@@ -317,16 +320,29 @@ function renderOrderEmail(
   return lines.join('\n');
 }
 
+/** Keys rendered bare (no `key: ` prefix) for party-like objects. */
+const PARTY_PLAIN_KEYS = new Set(['name', 'phone', 'email']);
+
 function formatValue(value: unknown): string {
-  if (isParty(value)) {
-    return [value.name, value.phone, value.email].filter(Boolean).join(' | ');
+  if (Array.isArray(value)) {
+    return value.map((v) => formatValue(v)).join(', ');
   }
   if (isPropertyAddress(value)) {
     const head = [value.street, value.unit, value.city].filter(Boolean).join(', ');
     return `${head}, ${value.state} ${value.zip}`;
   }
-  if (Array.isArray(value)) {
-    return value.map((v) => formatValue(v)).join(', ');
+  if (isPlainObject(value)) {
+    // Render every scalar field of the object (parties, employers, generic
+    // nested data) instead of dropping fields or printing [object Object].
+    const parts: string[] = [];
+    for (const [key, v] of Object.entries(value)) {
+      if (v === undefined || v === null || v === '') continue;
+      if (typeof v === 'object') continue;
+      parts.push(
+        PARTY_PLAIN_KEYS.has(key) ? String(v) : `${humanize(key)}: ${String(v)}`
+      );
+    }
+    return parts.join(' | ');
   }
   if (typeof value === 'number' && value > 1000) {
     return formatMoney(value);
@@ -345,15 +361,13 @@ function formatMoney(n: number): string {
 function humanize(key: string): string {
   return key
     .replace(/[_-]+/g, ' ')
+    .replace(/([a-zA-Z])(\d)/g, '$1 $2') // last4 → last 4
+    .replace(/\bssn\b/gi, 'SSN')
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function isParty(value: unknown): value is Party {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof (value as Party).name === 'string'
-  );
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function isPropertyAddress(value: unknown): value is PropertyAddress {
@@ -369,15 +383,3 @@ function isPropertyAddress(value: unknown): value is PropertyAddress {
 // Utilities                                                               //
 // ---------------------------------------------------------------------- //
 
-function randomUUID(): string {
-  const cryptoObj = globalThis.crypto;
-  if (cryptoObj && typeof cryptoObj.randomUUID === 'function') {
-    return cryptoObj.randomUUID();
-  }
-  // Fallback for runtimes without crypto.randomUUID (kept dependency-free).
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
