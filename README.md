@@ -13,6 +13,21 @@ MortgageVendorOS is the **mortgage API wrapper** for the fragmented third-party 
 
 ---
 
+## Documentation
+
+Full docs live as markdown in the repo — no separate docs site:
+
+| Doc | What's inside |
+| --- | --- |
+| [Getting Started](docs/getting-started.md) | Install, register vendors, drive the full lifecycle end to end |
+| [API Reference](docs/api-reference.md) | Every orchestrator + provider method, signatures, and types |
+| [Providers](docs/providers.md) | `MockProvider`, `ReggoraProvider`, `RestEmailFallback`, and writing your own |
+| [Data Models](docs/data-models.md) | The standardized snake_case order payloads |
+| [Errors](docs/errors.md) | The error hierarchy and stable codes |
+| [Deploying](docs/deploying.md) | Node 18+, Vercel Edge, Cloudflare Workers, and the Vercel template |
+
+---
+
 ## Quick Start
 
 ```bash
@@ -274,8 +289,6 @@ npm run typecheck # strict tsc --noEmit
 - [x] GitHub Actions CI (Node 18/20/22 matrix + package smoke test)
 - [x] Edge-compat guard (fails the build on `node:` imports)
 - [x] Vercel "Vibe Coder" template (`examples/vercel-template` — order/status/documents/messages routes + demo UI)
-- [ ] **Blocked** — Canopy Connect provider (VOE/VOA): Canopy pivoted to insurance verification ("Plaid for insurance"); the VOE/VOA product this item assumed no longer exists, and its current API is gated behind a developer-account request (no open API reference), which violates the Open-API-Vendors-Only rule. Recommended pivot: build the VOE/VOA provider against **Argyle** (openly published OpenAPI spec, market leader for VOE/VOA), or a Canopy **HOI/insurance** provider once developer access is granted.
-- [ ] GitHub Pages docs site + npm publish (workflow ready, gated on `NPM_TOKEN` + repo visibility)
 
 ## License
 
