@@ -1,0 +1,17 @@
+{
+  "name": "mortgage-vendor-os-vercel-template",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "1-click Vercel template for MortgageVendorOS — order, status, documents, and messaging routes with a demo UI. Bring your own vendor keys (BYOK).",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "mortgage-vendor-os": "file:../.."
+  }
+}

@@ -271,9 +271,9 @@ npm run typecheck # strict tsc --noEmit
 - [x] Unit tests (native Node `--test` runner)
 - [x] GitHub Actions CI (Node 18/20/22 matrix + package smoke test)
 - [x] Edge-compat guard (fails the build on `node:` imports)
+- [x] Vercel "Vibe Coder" template (`examples/vercel-template` — order/status/documents/messages routes + demo UI)
 - [ ] Canopy Connect provider (VOE/VOA)
 - [ ] GitHub Pages docs site + npm publish (workflow ready, gated on `NPM_TOKEN`)
-- [ ] Vercel "Vibe Coder" template (1-click deploy with status/messaging routes)
 
 ## License
 
