@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MortgageVendorOS — Open-Source Mortgage API Wrapper for Appraisal, Title, HOI, VOE/VOA &amp; Liens</title>
+    <meta name="description" content="MortgageVendorOS is a free, open-source, edge-compatible JavaScript library that unifies ordering, status tracking, messaging, and document retrieval across mortgage settlement vendors — Appraisal, Title, HOI, VOE/VOA, and Liens. Bring your own API keys (BYOK).">
+    <meta name="keywords" content="mortgage api wrapper, real estate settlement order management, appraisal api library, LOS API integrations, mortgage origination, appraisal order api, title order api, VOE VOA api, settlement vendor integration, mortgage vendor os">
+    <meta name="author" content="Spuds0588">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://spuds0588.github.io/MortgageVendorOS/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="MortgageVendorOS">
+    <meta property="og:title" content="MortgageVendorOS — Unify every mortgage settlement vendor behind one API">
+    <meta property="og:description" content="Order, track, message, and download from Appraisal, Title, HOI, VOE/VOA, and Lien vendors through one standardized lifecycle. Zero-dependency, edge-compatible, BYOK.">
+    <meta property="og:url" content="https://spuds0588.github.io/MortgageVendorOS/">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="MortgageVendorOS — Open-Source Mortgage API Wrapper">
+    <meta name="twitter:description" content="One API for every mortgage settlement vendor: Appraisal, Title, HOI, VOE/VOA, Liens. Order, status, messages, documents. Edge-compatible, zero-dependency, BYOK.">
+
+    <!-- Favicon (inline SVG) -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231d4ed8'/%3E%3Ctext x='16' y='22' font-family='Arial,sans-serif' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+
+    <!-- Structured data: SoftwareApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "MortgageVendorOS",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Node.js 18+, Vercel Edge, Cloudflare Workers",
+      "description": "Free, open-source, edge-compatible JavaScript library that unifies ordering, status tracking, messaging, and document retrieval across mortgage settlement vendors (Appraisal, Title, HOI, VOE/VOA, Liens).",
+      "url": "https://spuds0588.github.io/MortgageVendorOS/",
+      "license": "https://opensource.org/licenses/MIT",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "keywords": "mortgage api wrapper, appraisal api library, LOS API integrations, real estate settlement order management, VOE VOA api"
+    }
+    </script>
+
+    <!-- Structured data: FAQ (AEO) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is a mortgage API wrapper?",
+          "acceptedAnswer": { "@type": "Answer", "text": "A mortgage API wrapper is a library that normalizes how a loan origination system (LOS) talks to third-party settlement vendors — appraisal management companies, title companies, insurers, and verification services — behind one consistent interface. MortgageVendorOS is a free, open-source mortgage API wrapper for Node.js and edge serverless runtimes." }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I order an appraisal via API?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Register an appraisal provider with os.use('APPRAISAL', provider), then call await os.order('APPRAISAL', { address: '123 Main St', loan_amount: 500000 }). The returned vendorOrderId tracks the order for the rest of its lifecycle." }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I track a real estate settlement order?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Call await os.status('TITLE', vendorOrderId) to get the current state plus an isComplete boolean, os.documents() to fetch final XML/PDF download URLs, and os.getMessages() for the stipulation thread. This is real estate settlement order management without per-vendor code." }
+        },
+        {
+          "@type": "Question",
+          "name": "Does MortgageVendorOS work on serverless / edge runtimes?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. It has zero runtime dependencies and only uses the global fetch, so it runs on Node 18+, Vercel Edge Functions, and Cloudflare Workers." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is MortgageVendorOS free?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes — MIT-licensed open source. You supply your own vendor API keys (BYOK), so the library itself never collects fees or acts as a settlement service provider." }
+        }
+      ]
+    }
+    </script>
+
+    <style>
+        :root {
+            --accent: #1d4ed8;
+            --accent-deep: #1e40af;
+            --accent-soft: #eff6ff;
+            --ink: #111827;
+            --ink-2: #374151;
+            --dim: #6b7280;
+            --line: #e5e7eb;
+            --bg: #ffffff;
+            --bg-soft: #f9fafb;
+            --code-bg: #0f172a;
+            --code-text: #e2e8f0;
+            --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: var(--sans);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code, pre { font-family: var(--mono); }
+
+        .container { max-width: 1080px; margin: 0 auto; padding: 0 1.5rem; }
+
+        /* --- Nav --- */
+        .nav {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1.25rem 1.5rem; max-width: 1080px; margin: 0 auto;
+        }
+        .nav .brand { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--ink); }
+        .nav .brand:hover { text-decoration: none; }
+        .nav .brand .mark {
+            width: 26px; height: 26px; border-radius: 7px; background: var(--accent);
+            color: #fff; display: inline-flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; font-weight: 800;
+        }
+        .nav .links { display: flex; gap: 1.4rem; align-items: center; font-size: 0.95rem; }
+        .nav .links a { color: var(--ink-2); }
+        .nav .links a:hover { color: var(--accent); text-decoration: none; }
+
+        /* --- Hero --- */
+        .hero { padding: 5.5rem 0 4.5rem; text-align: center; }
+        .hero .tag {
+            display: inline-block; background: var(--accent-soft); color: var(--accent);
+            border: 1px solid #dbe7fe; border-radius: 999px; padding: 0.35rem 1rem;
+            font-size: 0.8rem; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 1.5rem;
+        }
+        .hero h1 {
+            font-size: clamp(2.3rem, 5.5vw, 3.6rem); font-weight: 800; letter-spacing: -0.03em;
+            line-height: 1.08; margin: 0 auto 1.25rem; max-width: 860px;
+        }
+        .hero h1 .accent { color: var(--accent); }
+        .hero .subtitle {
+            color: var(--ink-2); font-size: clamp(1.05rem, 2vw, 1.25rem);
+            max-width: 720px; margin: 0 auto 2.25rem;
+        }
+        .hero .subtitle code { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 5px; padding: 0.1em 0.35em; font-size: 0.92em; color: var(--accent-deep); }
+
+        /* --- Code box --- */
+        .code-box {
+            background: var(--code-bg); border-radius: 14px; padding: 1.4rem 1.6rem;
+            color: var(--code-text); text-align: left; max-width: 720px; margin: 0 auto;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14); position: relative;
+        }
+        .code-box .bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem; }
+        .code-box .dots { display: flex; gap: 6px; }
+        .code-box .dots span { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+        .code-box .dots span:nth-child(1) { background: #f87171; }
+        .code-box .dots span:nth-child(2) { background: #fbbf24; }
+        .code-box .dots span:nth-child(3) { background: #34d399; }
+        .copy-btn {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16);
+            color: #cbd5e1; padding: 4px 11px; border-radius: 6px; cursor: pointer;
+            font: inherit; font-size: 0.78rem; transition: all 0.15s;
+        }
+        .copy-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+        .code-box pre { margin: 0; font-size: 0.92rem; line-height: 1.65; overflow-x: auto; }
+        .code-box .c { color: #64748b; }
+        .code-box .k { color: #93c5fd; }
+        .code-box .s { color: #a7f3d0; }
+        .code-box .f { color: #f9a8d4; }
+
+        /* --- Buttons --- */
+        .buttons { display: flex; gap: 0.9rem; justify-content: center; flex-wrap: wrap; margin-top: 2.25rem; }
+        .button {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            font-weight: 600; font-size: 0.98rem; padding: 0.85rem 1.9rem; border-radius: 10px;
+            border: 1px solid transparent; cursor: pointer; transition: all 0.15s; font-family: inherit;
+        }
+        .button.is-primary { background: var(--accent); color: #fff; box-shadow: 0 8px 20px rgba(29, 78, 216, 0.25); }
+        .button.is-primary:hover { background: var(--accent-deep); transform: translateY(-1px); text-decoration: none; }
+        .button.is-ghost { background: var(--bg); color: var(--ink); border-color: var(--line); }
+        .button.is-ghost:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); text-decoration: none; }
+
+        /* --- Sections --- */
+        .section { padding: 4.5rem 0; }
+        .section-alt { background: var(--bg-soft); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+        .section-head { text-align: center; max-width: 720px; margin: 0 auto 3rem; }
+        .section-head .eyebrow { color: var(--accent); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+        .section-head h2 { font-size: clamp(1.7rem, 3.5vw, 2.3rem); letter-spacing: -0.02em; margin: 0.5rem 0 0.75rem; }
+        .section-head p { color: var(--ink-2); margin: 0; }
+
+        /* --- Feature grid --- */
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+        .box {
+            background: var(--bg); border: 1px solid var(--line); border-radius: 14px;
+            padding: 2rem 1.7rem; transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .box:hover { border-color: #bfdbfe; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
+        .box .icon { font-size: 1.7rem; display: block; margin-bottom: 0.9rem; }
+        .box h3 { font-size: 1.08rem; margin: 0 0 0.5rem; }
+        .box p { color: var(--ink-2); font-size: 0.94rem; margin: 0; }
+
+        /* --- AI strip --- */
+        .ai-strip {
+            display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
+            background: var(--accent-soft); border: 1px solid #dbe7fe; border-radius: 14px;
+            padding: 1.6rem 1.9rem; max-width: 900px; margin: 0 auto;
+        }
+        .ai-strip strong { color: var(--ink); font-size: 1.05rem; display: block; margin-bottom: 0.3rem; }
+        .ai-strip p { color: var(--ink-2); margin: 0; font-size: 0.95rem; }
+        .ai-strip code { color: var(--accent-deep); font-family: var(--mono); font-size: 0.9em; background: rgba(29, 78, 216, 0.08); padding: 0.1em 0.35em; border-radius: 4px; }
+        .ai-strip-link {
+            flex-shrink: 0; display: inline-flex; align-items: center; gap: 0.4rem;
+            background: var(--accent); color: #fff; font-weight: 600; font-size: 0.95rem;
+            padding: 0.75rem 1.4rem; border-radius: 10px; transition: background 0.15s;
+        }
+        .ai-strip-link:hover { background: var(--accent-deep); text-decoration: none; }
+
+        /* --- Usage / prompts --- */
+        .usage-title { text-align: center; font-size: 1.9rem; letter-spacing: -0.02em; margin: 0 0 2.25rem; }
+        .usage-box {
+            background: var(--code-bg); border-radius: 14px; padding: 1.6rem; max-width: 820px; margin: 0 auto;
+        }
+        .usage-box pre { background: transparent; color: #e2e8f0; margin: 0; font-size: 0.9rem; line-height: 1.7; overflow-x: auto; }
+        .usage-box .c { color: #64748b; }
+        .usage-box .k { color: #93c5fd; }
+        .usage-box .s { color: #a7f3d0; }
+        .usage-box .f { color: #f9a8d4; }
+
+        /* --- Prompts --- */
+        .prompt-list { display: grid; gap: 1rem; max-width: 820px; margin: 0 auto; }
+        .prompt {
+            background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 1.4rem 1.6rem;
+            display: flex; gap: 1.1rem; align-items: flex-start;
+        }
+        .prompt .num { color: var(--accent); font-weight: 700; font-family: var(--mono); font-size: 0.9rem; margin-top: 0.15rem; }
+        .prompt p { margin: 0 0 0.7rem; font-size: 0.97rem; }
+        .prompt .copy { margin-left: auto; flex-shrink: 0; }
+
+        /* --- FAQ --- */
+        .faq { max-width: 820px; margin: 0 auto; }
+        .faq details { border: 1px solid var(--line); border-radius: 12px; padding: 1.1rem 1.4rem; margin-bottom: 0.85rem; background: var(--bg); }
+        .faq summary { cursor: pointer; font-weight: 600; font-size: 1.02rem; }
+        .faq details p { color: var(--ink-2); margin: 0.8rem 0 0; font-size: 0.97rem; }
+        .faq details code { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 4px; padding: 0.05em 0.3em; font-size: 0.9em; color: var(--accent-deep); }
+
+        /* --- Footer --- */
+        footer { background: var(--bg-soft); border-top: 1px solid var(--line); padding: 3.5rem 0 3rem; text-align: center; color: var(--dim); font-size: 0.95rem; }
+        footer .links { margin: 1.25rem 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.25rem 1.6rem; }
+        footer a { color: var(--ink-2); }
+        footer a:hover { color: var(--accent); }
+
+        @media (max-width: 768px) {
+            .nav .links { display: none; }
+            .hero { padding: 3.5rem 0 3rem; }
+            .grid { grid-template-columns: 1fr; }
+            .ai-strip { flex-direction: column; align-items: stretch; text-align: center; }
+            .ai-strip-link { justify-content: center; }
+            .buttons { flex-direction: column; align-items: stretch; }
+            .button { width: 100%; }
+            .prompt { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="nav">
+        <a class="brand" href="/MortgageVendorOS/">
+            <span class="mark">M</span> MortgageVendorOS
+        </a>
+        <div class="links">
+            <a href="#quickstart">Quick Start</a>
+            <a href="#features">Features</a>
+            <a href="#prompts">Prompts</a>
+            <a href="#faq">FAQ</a>
+            <a href="https://github.com/Spuds0588/MortgageVendorOS" target="_blank" rel="noopener">GitHub</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <div class="tag">Open Source · Edge-Compatible · Bring Your Own Key</div>
+            <h1>Unify every mortgage settlement vendor behind <span class="accent">one API</span></h1>
+            <p class="subtitle">
+                Order, track, message, and download from <code>APPRAISAL</code>, <code>TITLE</code>,
+                <code>HOI</code>, <code>VOE/VOA</code>, and <code>LIEN</code> vendors through a single
+                standardized lifecycle — no custom state machine per vendor.
+            </p>
+
+            <div class="code-box">
+                <div class="bar">
+                    <div class="dots"><span></span><span></span><span></span></div>
+                    <button class="copy-btn" data-copy="npm install mortgage-vendor-os">Copy</button>
+                </div>
+                <pre><code><span class="c"># one dependency, zero runtime deps</span>
+<span class="k">npm install</span> mortgage-vendor-os</code></pre>
+            </div>
+
+            <div class="buttons">
+                <a class="button is-primary" href="#quickstart">Get Started</a>
+                <a class="button is-ghost" href="https://github.com/Spuds0588/MortgageVendorOS" target="_blank" rel="noopener">View on GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="section">
+        <div class="container">
+            <div class="section-head">
+                <div class="eyebrow">Why MortgageVendorOS</div>
+                <h2>The settlement verticals, translated.</h2>
+                <p>One library that turns fragmented third-party settlement services into a consistent, testable API.</p>
+            </div>
+            <div class="grid">
+                <div class="box">
+                    <span class="icon">🔁</span>
+                    <h3>Unified Lifecycle</h3>
+                    <p>Five methods drive every vendor: <code>order()</code>, <code>status()</code>, <code>documents()</code>, <code>sendMessage()</code>, <code>getMessages()</code>. Swap vendors without touching your LOS.</p>
+                </div>
+                <div class="box">
+                    <span class="icon">🔑</span>
+                    <h3>Bring Your Own Key</h3>
+                    <p>You pass your own API keys. The library never touches your credentials or your RESPA Section 8 exposure.</p>
+                </div>
+                <div class="box">
+                    <span class="icon">⚡</span>
+                    <h3>Edge-Compatible</h3>
+                    <p>Zero runtime dependencies, global <code>fetch</code> only. Runs on Node 18+, Vercel Edge, and Cloudflare Workers.</p>
+                </div>
+                <div class="box">
+                    <span class="icon">📧</span>
+                    <h3>Email Fallback</h3>
+                    <p><code>RestEmailFallback</code> orders and messages mom-and-pop vendors via Resend or SendGrid — and signals <code>REQUIRES_WEBHOOK_UPDATE</code> when polling isn't possible.</p>
+                </div>
+                <div class="box">
+                    <span class="icon">🗂️</span>
+                    <h3>Standardized Models</h3>
+                    <p>Typed snake_case data models for Appraisal, Title, HOI, VOE, VOA, and Liens that map cleanly onto mortgage-industry APIs.</p>
+                </div>
+                <div class="box">
+                    <span class="icon">🔓</span>
+                    <h3>Open Source</h3>
+                    <p>MIT-licensed and free. Tree-shakeable ESM with full TypeScript types — 20&nbsp;KB on disk.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI agents strip -->
+    <section class="section" style="padding-top: 0;">
+        <div class="container">
+            <div class="ai-strip">
+                <div>
+                    <strong>🤖 Building with an AI coding agent?</strong>
+                    <p>Point your vibe coder at <code>AGENTS.md</code> — a knowledge file that teaches any coding agent how to use MortgageVendorOS: install, the lifecycle API, providers, and gotchas.</p>
+                </div>
+                <a class="ai-strip-link" href="https://github.com/Spuds0588/MortgageVendorOS/blob/main/AGENTS.md" target="_blank" rel="noopener">Read AGENTS.md →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick start / usage -->
+    <section id="quickstart" class="section section-alt">
+        <div class="container">
+            <h2 class="usage-title">Quick Start</h2>
+            <div class="usage-box">
+                <pre><code><span class="k">import</span> { MortgageVendorOS, MockProvider, RestEmailFallback } <span class="k">from</span> <span class="s">'mortgage-vendor-os'</span>;
+
+<span class="k">const</span> os = <span class="k">new</span> MortgageVendorOS();
+
+<span class="c">// Register vendors (swap MockProvider for a real provider when you have keys)</span>
+os.use(<span class="s">'APPRAISAL'</span>, <span class="k">new</span> MockProvider());
+os.use(<span class="s">'TITLE'</span>, <span class="k">new</span> RestEmailFallback(<span class="s">'orders@bobstitle.com'</span>, process.env.RESEND_KEY));
+
+<span class="c">// 1. Place an order</span>
+<span class="k">const</span> order = <span class="k">await</span> os.order(<span class="s">'APPRAISAL'</span>, { address: <span class="s">'123 Main St'</span>, loan_amount: 500000 });
+
+<span class="c">// 2. Check status (poll on your own cadence)</span>
+<span class="k">const</span> status = <span class="k">await</span> os.status(<span class="s">'APPRAISAL'</span>, order.vendorOrderId);
+<span class="k">if</span> (status.isComplete) {
+  <span class="c">// 3. Retrieve final XML / PDF</span>
+  <span class="k">const</span> docs = <span class="k">await</span> os.documents(<span class="s">'APPRAISAL'</span>, order.vendorOrderId);
+  console.log(docs.downloadUrls);
+}
+
+<span class="c">// 4. Handle underwriting stipulations / messages</span>
+<span class="k">await</span> os.sendMessage(<span class="s">'APPRAISAL'</span>, order.vendorOrderId, { text: <span class="s">'Appraiser needs gate code: 1234'</span> });
+<span class="k">const</span> messages = <span class="k">await</span> os.getMessages(<span class="s">'APPRAISAL'</span>, order.vendorOrderId);</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Prompts for vibe coders / LLM agents -->
+    <section id="prompts" class="section">
+        <div class="container">
+            <div class="section-head">
+                <div class="eyebrow">For Vibe Coders & AI Agents</div>
+                <h2>Ready-to-use prompts</h2>
+                <p>Copy any prompt below into your AI coding agent to wire MortgageVendorOS into your project. Each one is self-contained.</p>
+            </div>
+            <div class="prompt-list">
+                <div class="prompt">
+                    <span class="num">01</span>
+                    <div>
+                        <p>Add MortgageVendorOS to my project and set up API routes for ordering an appraisal and checking its status, using <code>MockProvider</code> so it runs without keys.</p>
+                        <button class="copy-btn" data-copy="Add MortgageVendorOS to my project and set up API routes for ordering an appraisal and checking its status, using MockProvider so it runs without keys.">Copy prompt</button>
+                    </div>
+                </div>
+                <div class="prompt">
+                    <span class="num">02</span>
+                    <div>
+                        <p>Integrate MortgageVendorOS with <code>RestEmailFallback</code> so title orders are emailed to our vendor via Resend, and return <code>REQUIRES_WEBHOOK_UPDATE</code> signals for status and documents.</p>
+                        <button class="copy-btn" data-copy="Integrate MortgageVendorOS with RestEmailFallback so title orders are emailed to our vendor via Resend, and return REQUIRES_WEBHOOK_UPDATE signals for status and documents.">Copy prompt</button>
+                    </div>
+                </div>
+                <div class="prompt">
+                    <span class="num">03</span>
+                    <div>
+                        <p>Write a custom <code>BaseProvider</code> for MortgageVendorOS that maps my vendor's REST API onto the five lifecycle methods (<code>placeOrder</code>, <code>getStatus</code>, <code>getDocuments</code>, <code>sendMessage</code>, <code>getMessages</code>).</p>
+                        <button class="copy-btn" data-copy="Write a custom BaseProvider for MortgageVendorOS that maps my vendor's REST API onto the five lifecycle methods (placeOrder, getStatus, getDocuments, sendMessage, getMessages).">Copy prompt</button>
+                    </div>
+                </div>
+                <div class="prompt">
+                    <span class="num">04</span>
+                    <div>
+                        <p>Build a Vercel Edge Function that polls MortgageVendorOS order status on a schedule and pushes completed document URLs to a webhook.</p>
+                        <button class="copy-btn" data-copy="Build a Vercel Edge Function that polls MortgageVendorOS order status on a schedule and pushes completed document URLs to a webhook.">Copy prompt</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ (AEO) -->
+    <section id="faq" class="section section-alt">
+        <div class="container">
+            <div class="section-head">
+                <div class="eyebrow">FAQ</div>
+                <h2>Questions, answered</h2>
+            </div>
+            <div class="faq">
+                <details open>
+                    <summary>What is a mortgage API wrapper?</summary>
+                    <p>A mortgage API wrapper is a library that normalizes how a loan origination system (LOS) talks to third-party settlement vendors — appraisal management companies, title companies, insurers, and verification services — behind one consistent interface. MortgageVendorOS is a free, open-source mortgage API wrapper for Node.js and edge serverless runtimes.</p>
+                </details>
+                <details>
+                    <summary>How do I order an appraisal via API?</summary>
+                    <p>Register an appraisal provider with <code>os.use('APPRAISAL', provider)</code>, then call <code>await os.order('APPRAISAL', { address: '123 Main St', loan_amount: 500000 })</code>. The returned <code>vendorOrderId</code> tracks the order for the rest of its lifecycle.</p>
+                </details>
+                <details>
+                    <summary>How do I track a real estate settlement order?</summary>
+                    <p>Call <code>await os.status('TITLE', vendorOrderId)</code> to get the current state plus an <code>isComplete</code> boolean, <code>os.documents()</code> to fetch final XML/PDF download URLs, and <code>os.getMessages()</code> for the stipulation thread. This is real estate settlement order management without per-vendor code.</p>
+                </details>
+                <details>
+                    <summary>How do I integrate an appraisal API into my LOS?</summary>
+                    <p>Install <code>mortgage-vendor-os</code>, write a <code>BaseProvider</code> subclass that maps the vendor's REST endpoints onto the five lifecycle methods, register it with <code>os.use('APPRAISAL', provider)</code>, and route your LOS through the orchestrator. LOS API integrations never need to change when you switch vendors.</p>
+                </details>
+                <details>
+                    <summary>Does MortgageVendorOS work on serverless / edge runtimes?</summary>
+                    <p>Yes. It has zero runtime dependencies and only uses the global <code>fetch</code>, so it runs on Node 18+, Vercel Edge Functions, and Cloudflare Workers.</p>
+                </details>
+                <details>
+                    <summary>Is MortgageVendorOS free?</summary>
+                    <p>Yes — MIT-licensed open source. You supply your own vendor API keys (BYOK), so the library itself never collects fees or acts as a settlement service provider.</p>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>🏦 Built by <a href="https://github.com/Spuds0588" target="_blank" rel="noopener">Spuds0588</a></p>
+            <div class="links">
+                <a href="https://github.com/Spuds0588/MortgageVendorOS" target="_blank" rel="noopener">GitHub</a>
+                <a href="https://github.com/Spuds0588/MortgageVendorOS/blob/main/AGENTS.md" target="_blank" rel="noopener">AGENTS.md</a>
+                <a href="https://github.com/Spuds0588/MortgageVendorOS#readme" target="_blank" rel="noopener">README</a>
+            </div>
+            <p>© 2026 MortgageVendorOS. MIT License.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Copy-to-clipboard for all [data-copy] buttons
+        document.querySelectorAll('.copy-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var text = btn.getAttribute('data-copy') || '';
+                navigator.clipboard.writeText(text).then(function () {
+                    var original = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    setTimeout(function () { btn.textContent = original; }, 1800);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
