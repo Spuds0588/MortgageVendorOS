@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b1220">
     <title>MortgageVendorOS — Open-Source Mortgage API Wrapper for Appraisal, Title, HOI, VOE/VOA &amp; Liens</title>
     <meta name="description" content="MortgageVendorOS is a free, open-source, edge-compatible JavaScript library that unifies ordering, status tracking, messaging, and document retrieval across mortgage settlement vendors — Appraisal, Title, HOI, VOE/VOA, and Liens. Bring your own API keys (BYOK).">
     <meta name="keywords" content="mortgage api wrapper, real estate settlement order management, appraisal api library, LOS API integrations, mortgage origination, appraisal order api, title order api, VOE VOA api, settlement vendor integration, mortgage vendor os">
@@ -78,16 +79,17 @@
 
     <style>
         :root {
-            --accent: #1d4ed8;
-            --accent-deep: #1e40af;
-            --accent-soft: #eff6ff;
-            --ink: #111827;
-            --ink-2: #374151;
-            --dim: #6b7280;
-            --line: #e5e7eb;
-            --bg: #ffffff;
-            --bg-soft: #f9fafb;
-            --code-bg: #0f172a;
+            color-scheme: dark;
+            --accent: #3b82f6;
+            --accent-deep: #2563eb;
+            --accent-soft: #172554;
+            --ink: #e2e8f0;
+            --ink-2: #94a3b8;
+            --dim: #64748b;
+            --line: #1e293b;
+            --bg: #0b1220;
+            --bg-soft: #111a2e;
+            --code-bg: #050a16;
             --code-text: #e2e8f0;
             --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
             --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -129,7 +131,7 @@
         .hero { padding: 5.5rem 0 4.5rem; text-align: center; }
         .hero .tag {
             display: inline-block; background: var(--accent-soft); color: var(--accent);
-            border: 1px solid #dbe7fe; border-radius: 999px; padding: 0.35rem 1rem;
+            border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 999px; padding: 0.35rem 1rem;
             font-size: 0.8rem; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 1.5rem;
         }
         .hero h1 {
@@ -141,7 +143,7 @@
             color: var(--ink-2); font-size: clamp(1.05rem, 2vw, 1.25rem);
             max-width: 720px; margin: 0 auto 2.25rem;
         }
-        .hero .subtitle code { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 5px; padding: 0.1em 0.35em; font-size: 0.92em; color: var(--accent-deep); }
+        .hero .subtitle code { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 5px; padding: 0.1em 0.35em; font-size: 0.92em; color: var(--accent); }
 
         /* --- Code box --- */
         .code-box {
@@ -193,7 +195,7 @@
             background: var(--bg); border: 1px solid var(--line); border-radius: 14px;
             padding: 2rem 1.7rem; transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .box:hover { border-color: #bfdbfe; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
+        .box:hover { border-color: #3b82f6; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.14); }
         .box .icon { font-size: 1.7rem; display: block; margin-bottom: 0.9rem; }
         .box h3 { font-size: 1.08rem; margin: 0 0 0.5rem; }
         .box p { color: var(--ink-2); font-size: 0.94rem; margin: 0; }
@@ -201,12 +203,12 @@
         /* --- AI strip --- */
         .ai-strip {
             display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
-            background: var(--accent-soft); border: 1px solid #dbe7fe; border-radius: 14px;
+            background: var(--accent-soft); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 14px;
             padding: 1.6rem 1.9rem; max-width: 900px; margin: 0 auto;
         }
         .ai-strip strong { color: var(--ink); font-size: 1.05rem; display: block; margin-bottom: 0.3rem; }
         .ai-strip p { color: var(--ink-2); margin: 0; font-size: 0.95rem; }
-        .ai-strip code { color: var(--accent-deep); font-family: var(--mono); font-size: 0.9em; background: rgba(29, 78, 216, 0.08); padding: 0.1em 0.35em; border-radius: 4px; }
+        .ai-strip code { color: var(--accent); font-family: var(--mono); font-size: 0.9em; background: rgba(59, 130, 246, 0.16); padding: 0.1em 0.35em; border-radius: 4px; }
         .ai-strip-link {
             flex-shrink: 0; display: inline-flex; align-items: center; gap: 0.4rem;
             background: var(--accent); color: #fff; font-weight: 600; font-size: 0.95rem;
@@ -240,7 +242,7 @@
         .faq details { border: 1px solid var(--line); border-radius: 12px; padding: 1.1rem 1.4rem; margin-bottom: 0.85rem; background: var(--bg); }
         .faq summary { cursor: pointer; font-weight: 600; font-size: 1.02rem; }
         .faq details p { color: var(--ink-2); margin: 0.8rem 0 0; font-size: 0.97rem; }
-        .faq details code { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 4px; padding: 0.05em 0.3em; font-size: 0.9em; color: var(--accent-deep); }
+        .faq details code { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 4px; padding: 0.05em 0.3em; font-size: 0.9em; color: var(--accent); }
 
         /* --- Footer --- */
         footer { background: var(--bg-soft); border-top: 1px solid var(--line); padding: 3.5rem 0 3rem; text-align: center; color: var(--dim); font-size: 0.95rem; }
@@ -258,7 +260,7 @@
             border-radius: 12px; padding: 1.05rem 0.8rem; text-align: center;
             display: flex; flex-direction: column; gap: 0.3rem; justify-content: center;
         }
-        .flow-step:hover { border-color: #bfdbfe; }
+        .flow-step:hover { border-color: #3b82f6; }
         .flow-method { font-family: var(--mono); font-weight: 700; color: var(--accent); font-size: 0.9rem; }
         .flow-provider { font-family: var(--mono); color: var(--ink-2); font-size: 0.78rem; }
         .flow-result { font-size: 0.74rem; color: var(--dim); }
