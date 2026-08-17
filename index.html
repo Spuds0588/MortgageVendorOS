@@ -291,6 +291,31 @@
         .t-cur { display: inline-block; width: 8px; height: 1.05em; background: #93c5fd; vertical-align: text-bottom; animation: blink 1s steps(1) infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
+        /* --- Demo: tabs + live controls --- */
+        .terminal-tabs { margin-left: auto; display: flex; gap: 0.35rem; }
+        .tab {
+            background: transparent; border: 1px solid rgba(255, 255, 255, 0.12); color: #94a3b8;
+            padding: 0.28rem 0.8rem; border-radius: 7px; cursor: pointer; font: inherit; font-size: 0.76rem;
+            transition: all 0.15s;
+        }
+        .tab:hover { color: #e2e8f0; }
+        .tab.is-active { background: rgba(59, 130, 246, 0.22); border-color: rgba(59, 130, 246, 0.55); color: #93c5fd; }
+        .terminal-controls {
+            display: flex; gap: 0.5rem; padding: 0.6rem 1.1rem; flex-wrap: wrap;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .live-btn {
+            background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); color: #cbd5e1;
+            padding: 0.3rem 0.75rem; border-radius: 7px; cursor: pointer; font: inherit; font-size: 0.76rem;
+            transition: all 0.15s;
+        }
+        .live-btn:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+        .live-btn.is-run { background: rgba(59, 130, 246, 0.25); border-color: rgba(59, 130, 246, 0.55); color: #93c5fd; }
+        .live-btn.is-run:hover { background: rgba(59, 130, 246, 0.38); }
+        .live-btn:disabled { opacity: 0.5; cursor: wait; }
+        .demo-note { text-align: center; margin-top: 1.3rem; color: var(--dim); font-size: 0.9rem; }
+        .demo-note a { color: var(--accent); }
+
         @media (max-width: 768px) {
             .nav .links { display: none; }
             .flow-arrow { transform: rotate(90deg); padding: 0.15rem 0; }
@@ -353,7 +378,7 @@
             <div class="section-head">
                 <div class="eyebrow">See it in action</div>
                 <h2>One API, five methods, every vendor</h2>
-                <p>Watch the full lifecycle run — place an order, poll until complete, fetch the report, and message the vendor.</p>
+                <p>Watch the full lifecycle run — or switch to <strong>Try it live</strong> and run the real library in your browser (keyless, no server).</p>
             </div>
 
             <div class="flow" role="img" aria-label="MortgageVendorOS lifecycle: order, status, documents, sendMessage, getMessages">
@@ -391,16 +416,33 @@
             <div class="terminal">
                 <div class="terminal-bar">
                     <div class="dots"><span></span><span></span><span></span></div>
-                    <span class="terminal-title">mortgage-vendor-os — demo session</span>
-                    <div class="terminal-actions">
-                        <button class="copy-btn" id="demo-skip">Skip</button>
-                        <button class="copy-btn" id="demo-replay">Replay</button>
+                    <span class="terminal-title">mortgage-vendor-os — demo</span>
+                    <div class="terminal-tabs">
+                        <button class="tab is-active" id="tab-demo">▶ Watch demo</button>
+                        <button class="tab" id="tab-live">⌨ Try it live</button>
                     </div>
+                </div>
+                <div class="terminal-controls" id="demo-controls">
+                    <button class="copy-btn" id="demo-skip">Skip</button>
+                    <button class="copy-btn" id="demo-replay">Replay</button>
+                </div>
+                <div class="terminal-controls" id="live-controls" hidden>
+                    <button class="live-btn" data-action="init">New OS</button>
+                    <button class="live-btn" data-action="order">Place order</button>
+                    <button class="live-btn" data-action="status">Poll status</button>
+                    <button class="live-btn" data-action="documents">Documents</button>
+                    <button class="live-btn" data-action="message">Send message</button>
+                    <button class="live-btn" data-action="thread">Messages</button>
+                    <button class="live-btn is-run" data-action="runall">Run full lifecycle</button>
                 </div>
                 <div class="terminal-body">
                     <pre id="terminal-pre"></pre>
+                    <pre id="live-pre" hidden></pre>
                 </div>
             </div>
+            <p class="demo-note">Runs the real <code>mortgage-vendor-os</code> in your browser — no keys, no server. Prefer a notebook?
+                <a href="https://npm.runkit.com/mortgage-vendor-os" target="_blank" rel="noopener">Try it on RunKit</a> ·
+                <a href="https://www.npmjs.com/package/mortgage-vendor-os" target="_blank" rel="noopener">npm</a></p>
         </div>
     </section>
 
@@ -711,6 +753,158 @@ os.use(<span class="s">'TITLE'</span>, <span class="k">new</span> RestEmailFallb
             skipBtn.addEventListener('click', skip);
             replayBtn.addEventListener('click', play);
             play();
+        })();
+    </script>
+
+    <script>
+        // Interactive demo — runs the REAL library in the browser (CDN import).
+        (function () {
+            var livePre = document.getElementById('live-pre');
+            var liveControls = document.getElementById('live-controls');
+            var demoControls = document.getElementById('demo-controls');
+            var demoPre = document.getElementById('terminal-pre');
+            var tabDemo = document.getElementById('tab-demo');
+            var tabLive = document.getElementById('tab-live');
+            if (!livePre || !liveControls || !demoControls || !demoPre || !tabDemo || !tabLive) return;
+
+            var state = { lib: null, os: null, order: null, busy: false };
+
+            function showDemo() {
+                tabDemo.classList.add('is-active');
+                tabLive.classList.remove('is-active');
+                demoControls.hidden = false;
+                liveControls.hidden = true;
+                demoPre.hidden = false;
+                livePre.hidden = true;
+            }
+            function showLive() {
+                tabLive.classList.add('is-active');
+                tabDemo.classList.remove('is-active');
+                demoControls.hidden = true;
+                liveControls.hidden = false;
+                demoPre.hidden = true;
+                livePre.hidden = false;
+            }
+            tabDemo.addEventListener('click', showDemo);
+            tabLive.addEventListener('click', showLive);
+
+            function line(cls, text) {
+                var s = document.createElement('span');
+                s.className = cls;
+                s.textContent = text;
+                livePre.appendChild(s);
+                livePre.appendChild(document.createTextNode('\n'));
+                livePre.parentElement.scrollTop = livePre.parentElement.scrollHeight;
+            }
+            function cmd(text) { line('t-cmd', '$ ' + text); }
+            function out(text) { line('t-out', '→ ' + text); }
+            function ok(text) { line('t-ok', text); }
+            function warn(text) { line('t-out', '⚠ ' + text); }
+
+            async function loadLib() {
+                if (state.lib) return state.lib;
+                var urls = [
+                    'https://cdn.jsdelivr.net/npm/mortgage-vendor-os@0.1.0/+esm',
+                    'https://esm.sh/mortgage-vendor-os@0.1.0'
+                ];
+                var lastErr = null;
+                for (var i = 0; i < urls.length; i++) {
+                    try {
+                        state.lib = await import(urls[i]);
+                        return state.lib;
+                    } catch (e) { lastErr = e; }
+                }
+                throw lastErr;
+            }
+
+            function setBusy(b) {
+                state.busy = b;
+                Array.prototype.forEach.call(liveControls.querySelectorAll('button'), function (btn) {
+                    btn.disabled = b;
+                });
+            }
+
+            async function actionInit() {
+                var lib = await loadLib();
+                state.os = new lib.MortgageVendorOS();
+                state.os.use('APPRAISAL', new lib.MockProvider({ name: 'Live Demo' }));
+                state.order = null;
+                cmd('const os = new MortgageVendorOS()');
+                cmd("os.use('APPRAISAL', new MockProvider())");
+                ok('✓ Registered MockProvider → APPRAISAL');
+            }
+
+            async function actionOrder() {
+                if (!state.os) await actionInit();
+                state.order = await state.os.order('APPRAISAL', { address: '123 Main St', loan_amount: 500000 });
+                cmd("const order = await os.order('APPRAISAL', { address: '123 Main St', loan_amount: 500000 })");
+                out(JSON.stringify({ vendorOrderId: state.order.vendorOrderId, status: state.order.status, provider: state.order.provider }));
+            }
+
+            async function actionStatus() {
+                if (!state.order) { warn('Place an order first.'); return; }
+                var status = await state.os.status('APPRAISAL', state.order.vendorOrderId);
+                cmd("await os.status('APPRAISAL', order.vendorOrderId)");
+                out(JSON.stringify({ state: status.state, isComplete: status.isComplete }));
+            }
+
+            async function actionDocuments() {
+                if (!state.order) { warn('Place an order first.'); return; }
+                var docs = await state.os.documents('APPRAISAL', state.order.vendorOrderId);
+                cmd("await os.documents('APPRAISAL', order.vendorOrderId)");
+                out(JSON.stringify({ status: docs.status, downloadUrls: docs.downloadUrls }));
+            }
+
+            async function actionMessage() {
+                if (!state.order) { warn('Place an order first.'); return; }
+                var sent = await state.os.sendMessage('APPRAISAL', state.order.vendorOrderId, { text: 'Gate code: 1234' });
+                cmd("await os.sendMessage('APPRAISAL', order.vendorOrderId, { text: 'Gate code: 1234' })");
+                out(JSON.stringify({ messageId: sent.messageId, status: sent.status }));
+            }
+
+            async function actionThread() {
+                if (!state.order) { warn('Place an order first.'); return; }
+                var thread = await state.os.getMessages('APPRAISAL', state.order.vendorOrderId);
+                cmd("await os.getMessages('APPRAISAL', order.vendorOrderId)");
+                out(JSON.stringify({ status: thread.status, count: thread.messages.length }));
+            }
+
+            var actions = {
+                init: actionInit,
+                order: actionOrder,
+                status: actionStatus,
+                documents: actionDocuments,
+                message: actionMessage,
+                thread: actionThread
+            };
+
+            async function runAll() {
+                setBusy(true);
+                try {
+                    await actionInit();
+                    await actionOrder();
+                    await actionStatus();
+                    await actionStatus();
+                    await actionDocuments();
+                    await actionMessage();
+                    await actionThread();
+                    ok('✓ Live lifecycle complete — the real library, running in your browser.');
+                } catch (e) {
+                    warn('Could not load the library from CDN: ' + e.message);
+                } finally {
+                    setBusy(false);
+                }
+            }
+
+            liveControls.addEventListener('click', function (ev) {
+                var btn = ev.target.closest ? ev.target.closest('button') : null;
+                if (!btn || state.busy) return;
+                var action = btn.getAttribute('data-action');
+                if (action === 'runall') { runAll(); return; }
+                Promise.resolve(actions[action]()).catch(function (e) {
+                    warn('Error: ' + e.message);
+                });
+            });
         })();
     </script>
 </body>

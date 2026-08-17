@@ -36,6 +36,8 @@ const thread = await os.getMessages('APPRAISAL', order.vendorOrderId);
 ```
 
 - **Homepage:** <https://spuds0588.github.io/MortgageVendorOS/>
+- **Try it live:** <https://npm.runkit.com/mortgage-vendor-os>
+- **npm:** <https://www.npmjs.com/package/mortgage-vendor-os>
 - **Repo:** <https://github.com/Spuds0588/MortgageVendorOS>
 - **AGENTS.md** (for AI coding agents): [`../AGENTS.md`](../AGENTS.md)
 - **Vercel template:** [`../examples/vercel-template/`](../examples/vercel-template/)
