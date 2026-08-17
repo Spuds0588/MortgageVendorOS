@@ -1,5 +1,7 @@
 # MortgageVendorOS
 
+> 🏠 **Homepage:** [https://spuds0588.github.io/MortgageVendorOS/](https://spuds0588.github.io/MortgageVendorOS/) — live demo, feature overview, FAQ, and copy-paste prompts for AI coding agents.
+
 **A free, open-source, edge-compatible JavaScript library that unifies ordering, status tracking, messaging, and document retrieval across mortgage settlement vendors.**
 
 MortgageVendorOS is the **mortgage API wrapper** for the fragmented third-party settlement verticals — Appraisal, Title, HOI, VOE/VOA, and Liens. Instead of writing a custom state machine per vendor, register a provider once and drive the full lifecycle with five methods: `order()`, `status()`, `documents()`, `sendMessage()`, `getMessages()`.
