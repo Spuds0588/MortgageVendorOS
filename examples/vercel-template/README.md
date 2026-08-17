@@ -49,9 +49,8 @@ Push this directory (or the whole repo) to GitHub, then:
 2. Add any vendor secrets above as environment variables.
 3. Deploy. The API routes run on the Edge Runtime; `/` serves the demo UI.
 
-Once `mortgage-vendor-os` is published to npm, you can swap the `file:../..`
-dependency in `package.json` for `"mortgage-vendor-os": "^0.1.0"` so the
-template deploys standalone without the library repo.
+The template depends on `mortgage-vendor-os` from the npm registry
+(`^0.1.0`), so it deploys standalone — no need to bring the library repo.
 
 ## Example calls
 

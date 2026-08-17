@@ -12,6 +12,6 @@
     "node": ">=18"
   },
   "dependencies": {
-    "mortgage-vendor-os": "file:../.."
+    "mortgage-vendor-os": "^0.1.0"
   }
 }
