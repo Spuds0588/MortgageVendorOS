@@ -5,7 +5,7 @@
 MortgageVendorOS is the **mortgage API wrapper** for the fragmented third-party settlement verticals — Appraisal, Title, HOI, VOE/VOA, and Liens. Instead of writing a custom state machine per vendor, register a provider once and drive the full lifecycle with five methods: `order()`, `status()`, `documents()`, `sendMessage()`, `getMessages()`.
 
 - 🔑 **BYOK (Bring Your Own Key)** — you pass your own API keys; the library never touches your credentials or your RESPA Section 8 exposure.
-- 🧩 **Plugin architecture** — drop in `RestEmailFallback` for mom-and-pop vendors, `MockProvider` for demos, or write your own `BaseProvider`.
+- 🧩 **Plugin architecture** — drop in `ReggoraProvider` for real appraisal ordering, `RestEmailFallback` for mom-and-pop vendors, `MockProvider` for demos, or write your own `BaseProvider`.
 - ⚡ **Edge-compatible & zero-dependency** — runs on Node 18+, Vercel Edge, and Cloudflare Workers. No `fs`, no `nodemailer`, no heavy binaries. Uses only the global `fetch`.
 - 🌳 **Tree-shakeable** — single ESM package (`mortgage-vendor-os`), `sideEffects: false`, typed end to end.
 
@@ -95,6 +95,44 @@ await os.status('APPRAISAL', order.vendorOrderId); // COMPLETE
 
 mock.simulateInboundMessage(order.vendorOrderId, 'Gate code received, thanks!');
 ```
+
+### `ReggoraProvider` — real appraisal orders via Reggora's Lender API
+
+Reggora is a real appraisal management platform with an open REST API. `ReggoraProvider` maps Reggora's Lender API (orders, submissions, conversations) onto the standardized lifecycle — JWT + API-key auth, sandbox or production.
+
+```javascript
+import { MortgageVendorOS, ReggoraProvider } from 'mortgage-vendor-os';
+
+const os = new MortgageVendorOS();
+os.use('APPRAISAL', new ReggoraProvider(
+  process.env.REGGORA_AUTH_TOKEN,      // JWT
+  process.env.REGGORA_INTEGRATION_KEY, // integration key
+  { baseUrl: 'https://sandbox.reggora.io/lender/' } // omit for production
+));
+
+// Reggora references an existing loan file + product catalog by id, so those
+// travel through the standardized `extra` passthrough:
+const order = await os.order('APPRAISAL', {
+  address: '100 Brighton Ave',
+  loan_amount: 500000,
+  extra: {
+    loan: '5c33c716681f110034effc73',       // Reggora loan file id (required)
+    products: ['5b55d4c68d9472000fc432ef'], // Reggora product ids (required)
+    priority: 'Rush',                        // 'Normal' | 'Rush'
+    allocation_type: 'manually',             // defaults to 'automatically'
+    vendors: ['5b859eebc5a0c9004e38dd8e'],  // required when 'manually'
+    due_date: '2026-09-01T21:00:00Z',        // defaults to now + 14 days
+    additional_fees: [{ description: 'Large yard', amount: '50' }],
+  },
+});
+
+// status()/documents()/sendMessage()/getMessages() map onto Reggora's
+// order, order-submissions, and conversation endpoints automatically.
+```
+
+Reggora status strings are mapped to the standardized states (`Submitted`/`Order Complete` → `COMPLETE`, `Cancelled` → `CANCELLED`, everything else → `IN_PROGRESS`). Documents come from the latest submission version (`pdf_report`/`xml_report`/`invoice` URLs). Messaging resolves the order's conversation id for you.
+
+Options: `baseUrl` (`https://api.reggora.io/lender/` default | sandbox), `fetchImpl` (testability).
 
 ### `RestEmailFallback` — no-API vendors via email
 
@@ -229,10 +267,12 @@ npm run typecheck # strict tsc --noEmit
 - [x] Core orchestrator + `BaseProvider` contract
 - [x] `RestEmailFallback` (Resend / SendGrid)
 - [x] `MockProvider` for keyless demos
+- [x] `ReggoraProvider` (lender API: orders, status, messages, submissions)
 - [x] Unit tests (native Node `--test` runner)
-- [ ] Reggora provider (lender API: orders, status, messages, submissions)
+- [x] GitHub Actions CI (Node 18/20/22 matrix + package smoke test)
+- [x] Edge-compat guard (fails the build on `node:` imports)
 - [ ] Canopy Connect provider (VOE/VOA)
-- [ ] GitHub Pages docs site + CI publishing to npm
+- [ ] GitHub Pages docs site + npm publish (workflow ready, gated on `NPM_TOKEN`)
 - [ ] Vercel "Vibe Coder" template (1-click deploy with status/messaging routes)
 
 ## License

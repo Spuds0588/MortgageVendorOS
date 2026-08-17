@@ -322,6 +322,21 @@
                     <p>You pass your own API keys. The library never touches your credentials or your RESPA Section 8 exposure.</p>
                 </div>
                 <div class="box">
+                    <span class="icon">🏢</span>
+                    <h3>Reggora Provider</h3>
+                    <p><code>ReggoraProvider</code> orders real appraisals through Reggora's Lender API — orders, status, submissions, and conversations — sandbox or production.</p>
+                </div>
+                <div class="box">
+                    <span class="icon">🛡️</span>
+                    <h3>Typed Errors</h3>
+                    <p>Stable error codes (<code>MISSING_PROVIDER</code>, <code>ORDER_NOT_FOUND</code>, <code>PROVIDER_ERROR</code>…) make failure handling predictable in every runtime.</p>
+                </div>
+                <div class="box">
+                    <span class="icon">🧪</span>
+                    <h3>Testable</h3>
+                    <p><code>MockProvider</code> simulates the full lifecycle without keys, and every provider accepts an injected <code>fetchImpl</code> for deterministic tests.</p>
+                </div>
+                <div class="box">
                     <span class="icon">⚡</span>
                     <h3>Edge-Compatible</h3>
                     <p>Zero runtime dependencies, global <code>fetch</code> only. Runs on Node 18+, Vercel Edge, and Cloudflare Workers.</p>

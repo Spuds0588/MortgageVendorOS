@@ -94,6 +94,43 @@ os.use('APPRAISAL', new MockProvider({ name: 'Acme Appraisals (mock)', statusChe
 - `simulateInboundMessage(vendorOrderId, text, author?)` fakes a vendor reply.
 - `setState(vendorOrderId, state)` forces a state; `hasOrder(id)` checks existence.
 
+### `ReggoraProvider` — real appraisal orders via Reggora
+
+Reggora's Lender API (JWT + API-key auth) is mapped onto the lifecycle:
+
+```js
+import { MortgageVendorOS, ReggoraProvider } from 'mortgage-vendor-os';
+
+const os = new MortgageVendorOS();
+os.use('APPRAISAL', new ReggoraProvider(
+  process.env.REGGORA_AUTH_TOKEN,
+  process.env.REGGORA_INTEGRATION_KEY,
+  { baseUrl: 'https://sandbox.reggora.io/lender/' } // omit for production
+));
+
+const order = await os.order('APPRAISAL', {
+  address: '100 Brighton Ave',
+  extra: {
+    loan: '5c33c716681f110034effc73',       // Reggora loan file id (required)
+    products: ['5b55d4c68d9472000fc432ef'], // Reggora product ids (required)
+    priority: 'Rush',                        // 'Normal' | 'Rush'
+    allocation_type: 'manually',             // defaults to 'automatically'
+    vendors: ['5b859eebc5a0c9004e38dd8e'],  // required when 'manually'
+    due_date: '2026-09-01T21:00:00Z',        // defaults to now + 14 days
+  },
+});
+```
+
+- `order()` → `POST /lender/order`; `status()` → `GET /lender/order/<id>`
+  (Reggora status strings map to standardized states — `Submitted`/`Order
+  Complete` → `COMPLETE`, `Cancelled` → `CANCELLED`).
+- `documents()` → `GET /lender/order-submissions/<id>` (latest submission's
+  `pdf_report`/`xml_report`/`invoice` URLs).
+- `sendMessage()`/`getMessages()` resolve the order's `conversation` id, then
+  `POST`/`GET /lender/conversation/<id>`.
+- Reggora-specific fields travel through `payload.extra` (the standardized
+  passthrough) since Reggora references loan files and products by id.
+
 ### `RestEmailFallback` — vendors with no API
 
 ```js
@@ -169,6 +206,10 @@ standardized models (`AppraisalOrder`, `TitleOrder`, `HoiOrder`, `VoeOrder`,
   `getMessages` return `REQUIRES_WEBHOOK_UPDATE`. If you call `status()` in a
   loop expecting progress, you'll get the same signal forever — build the
   webhook path instead.
+- **`ReggoraProvider` needs Reggora ids, not property details.** Reggora's
+  create-order endpoint references an existing loan file and product catalog
+  by id — you must pass `extra.loan` and `extra.products`, or `placeOrder`
+  throws a `ProviderError`. Property address/amount are informational.
 - **Verified senders only.** Resend/SendGrid reject `from` addresses that
   aren't verified on the account. Use a verified domain or the provider's
   default `onboarding@` address in dev.

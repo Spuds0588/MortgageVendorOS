@@ -31,6 +31,15 @@ export {
 export { RestEmailFallback } from './providers/RestEmailFallback.js';
 export type { EmailProvider, RestEmailFallbackOptions } from './providers/RestEmailFallback.js';
 
+export { ReggoraProvider } from './providers/ReggoraProvider.js';
+export type {
+  ReggoraProviderOptions,
+  ReggoraPriority,
+  ReggoraAllocationType,
+  ReggoraOrderRequestMethod,
+  ReggoraOrderExtra,
+} from './providers/ReggoraProvider.js';
+
 export { MockProvider } from './providers/MockProvider.js';
 export type { MockProviderOptions } from './providers/MockProvider.js';
 
