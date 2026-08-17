@@ -432,6 +432,7 @@
                     <button class="live-btn" data-action="status">Poll status</button>
                     <button class="live-btn" data-action="documents">Documents</button>
                     <button class="live-btn" data-action="message">Send message</button>
+                    <button class="live-btn" data-action="reply">Simulate reply</button>
                     <button class="live-btn" data-action="thread">Messages</button>
                     <button class="live-btn is-run" data-action="runall">Run full lifecycle</button>
                 </div>
@@ -678,7 +679,7 @@ os.use(<span class="s">'TITLE'</span>, <span class="k">new</span> RestEmailFallb
                 { type: 'cmd', text: "await os.sendMessage('APPRAISAL', order.vendorOrderId, {\n  text: 'Appraiser needs gate code: 1234',\n})" },
                 { type: 'out', text: "→ { messageId: 'c9d2…7f01', status: 'SENT', created_at: '2026-08-16T…Z' }" },
                 { type: 'cmd', text: "await os.getMessages('APPRAISAL', order.vendorOrderId)" },
-                { type: 'out', text: "→ { status: 'AVAILABLE', messages: [{ direction: 'OUTBOUND', text: '…' }] }" },
+                { type: 'out', text: "→ { status: 'AVAILABLE', messages: [\n  { direction: 'OUTBOUND', text: 'Appraiser needs gate code: 1234' } ] }" },
                 { type: 'done', text: '✓ Lifecycle complete — five methods, any vendor, zero vendor-specific code.' }
             ];
 
@@ -827,7 +828,8 @@ os.use(<span class="s">'TITLE'</span>, <span class="k">new</span> RestEmailFallb
             async function actionInit() {
                 var lib = await loadLib();
                 state.os = new lib.MortgageVendorOS();
-                state.os.use('APPRAISAL', new lib.MockProvider({ name: 'Live Demo' }));
+                state.provider = new lib.MockProvider({ name: 'Live Demo' });
+                state.os.use('APPRAISAL', state.provider);
                 state.order = null;
                 cmd('const os = new MortgageVendorOS()');
                 cmd("os.use('APPRAISAL', new MockProvider())");
@@ -866,7 +868,25 @@ os.use(<span class="s">'TITLE'</span>, <span class="k">new</span> RestEmailFallb
                 if (!state.order) { warn('Place an order first.'); return; }
                 var thread = await state.os.getMessages('APPRAISAL', state.order.vendorOrderId);
                 cmd("await os.getMessages('APPRAISAL', order.vendorOrderId)");
-                out(JSON.stringify({ status: thread.status, count: thread.messages.length }));
+                if (!thread.messages.length) {
+                    out("→ { status: 'AVAILABLE', messages: [] } — nothing here yet. Send a message or simulate a reply.");
+                    return;
+                }
+                out('status: ' + thread.status + ' · ' + thread.messages.length + ' message(s):');
+                thread.messages.forEach(function (m) {
+                    var tag = m.direction === 'INBOUND' ? '⇐ IN' : '⇒ OUT';
+                    line('t-out', '  [' + tag + '] ' + (m.author || 'You') + ': ' + m.text);
+                });
+            }
+
+            async function actionReply() {
+                if (!state.order) { warn('Place an order first.'); return; }
+                state.provider.simulateInboundMessage(
+                    state.order.vendorOrderId,
+                    'Gate code received — appraiser on site tomorrow at 9 AM.',
+                    'Live Vendor'
+                );
+                ok('⇐ Simulated vendor reply — hit Messages to read the thread.');
             }
 
             var actions = {
@@ -875,6 +895,7 @@ os.use(<span class="s">'TITLE'</span>, <span class="k">new</span> RestEmailFallb
                 status: actionStatus,
                 documents: actionDocuments,
                 message: actionMessage,
+                reply: actionReply,
                 thread: actionThread
             };
 
